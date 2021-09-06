@@ -28,6 +28,7 @@ import (
 var (
 	targetBucketName string
 	targetPrefix string
+)
 
 func HandleRequest(ctx context.Context, s3Event events.S3Event) {
 	for _, record := range s3Event.Records {
