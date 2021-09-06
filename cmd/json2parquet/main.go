@@ -25,6 +25,10 @@ import (
 	"github.com/xitongsys/parquet-go/writer"
 )
 
+var (
+	targetBucketName string
+	targetPrefix string
+
 func HandleRequest(ctx context.Context, s3Event events.S3Event) {
 	for _, record := range s3Event.Records {
 		s3Entity := record.S3
@@ -35,8 +39,14 @@ func HandleRequest(ctx context.Context, s3Event events.S3Event) {
 }
 
 func ProcessS3File(bucket, key string) {
-	targetBucketName := os.Getenv("TARGET_BUCKET")
+	targetBucketName = os.Getenv("TARGET_BUCKET")
 	if len(targetBucketName) == 0 {
+		log.Println("ENV 'TARGET_BUCKET' is empty")
+		return
+	}
+
+	targetPrefix = os.Getenv("TARGET_PREFIX")
+	if len(targetPrefix) == 0 {
 		log.Println("ENV 'TARGET_BUCKET' is empty")
 		return
 	}
@@ -138,7 +148,7 @@ func newObjectKey(key string, createTime int64) string {
 	dt := time.Unix(createTime, 0).In(loc)
 	dstFold := dt.Format("year=2006/month=01/day=02")
 
-	return fmt.Sprintf("logevent/%s/%s.parquet", dstFold, filename)
+	return fmt.Sprintf("%s/%s/%s.parquet", targetPrefix, dstFold, filename)
 }
 
 func detectGzip(input io.Reader) (io.Reader, bool) {
